@@ -2,6 +2,10 @@ const express = require('express');
 const app = express();
 const toiletTrackerAPI = require('./services/toilet-tracker-api');
 const fs = require('fs');
+const rpio = require('rpio');
+
+rpio.open(11, rpio.INPUT);
+console.log('Pin 11 is currently set ' + (rpio.read(11) ? 'high' : 'low'));
 
 app.get('/', function (req, res) {
   return res.redirect('/status?is-busy=true');
