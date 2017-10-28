@@ -15,7 +15,7 @@ app.get('/status', function (req, res) {
     data = fs.readFileSync('./templates/available.html').toString();
   }
   res.send(data);
-  toiletTrackerAPI.postCurrentStatus(true);
+  toiletTrackerAPI.postCurrentStatus(req.query['is-busy'] === 'true');
 });
 
 app.listen(3030, function () {
