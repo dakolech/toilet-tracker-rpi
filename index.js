@@ -4,8 +4,35 @@ const toiletTrackerAPI = require('./services/toilet-tracker-api');
 const fs = require('fs');
 const rpio = require('rpio');
 
-rpio.open(11, rpio.INPUT);
-console.log('Pin 11 is currently set ' + (rpio.read(11) ? 'high' : 'low'));
+var previousLightState;
+var statusUpdatesTimer;
+//GPIO 17
+rpio.open(11, rpio.INPUT, rpio.PULL_DOWN);
+
+function pollcb(pin)
+{
+  /*
+   * Interrupts aren't supported by the underlying hardware, so events
+   * may be missed during the 1ms poll window.  The best we can do is to
+   * print the current state after a event is detected.
+   */
+  const isLightOn = !rpio.read(pin);
+  console.log('light is currently', isLightOn ? 'on' : 'off');
+  if(previousLightState !== isLightOn) {
+    statusUpdateDebouncer(isLightOn);
+    previousLightState = isLightOn;
+  }
+}
+
+rpio.poll(11, pollcb);
+
+
+const statusUpdateDebouncer = function (status) {
+  clearTimeout(statusUpdatesTimer);
+  statusUpdatesTimer = setTimeout(function() {
+    toiletTrackerAPI.postCurrentStatus(status)
+  }, 1000)
+};
 
 app.get('/', function (req, res) {
   return res.redirect('/status?is-busy=true');
